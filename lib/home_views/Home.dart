@@ -76,9 +76,9 @@ class _HomePageState extends State<HomePage> {
                       ElevatedButton(
                           child: Text('Ndef Write'),
                           onPressed: _ndefWrite),
-                      ElevatedButton(
-                          child: Text('Ndef Write Lock'),
-                          onPressed: _ndefWriteLock),
+                      //ElevatedButton(
+                      //    child: Text('Ndef Write Lock'),
+                      //    onPressed: _ndefWriteLock),
                     ],
                   ),
                 ),
