@@ -3,8 +3,12 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:nfc_manager/nfc_manager.dart';
+import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
@@ -28,14 +32,77 @@ class _HomePageState extends State<HomePage> {
   ValueNotifier<dynamic> result = ValueNotifier(null);
   //late TextFormField inputText;
   TextEditingController textController=TextEditingController(text: "Mensaje para guardar en el NFC");
+  late StreamSubscription _intentDataStreamSubscription;
+  late List<SharedMediaFile> _sharedFiles;
+  late String _sharedText;
+
+
+  @override
+  void initState(){
+    // TODO: implement initState
+    super.initState();
+
+    initIntentData();
+
+
+  }
+
+  void initIntentData() async{
+    // For sharing or opening urls/text coming from outside the app while the app is in the memory
+    print("DEBUG!!!! --->>>>>> "+ReceiveSharingIntent.getInitialText().toString());
+    _intentDataStreamSubscription =
+        ReceiveSharingIntent.getTextStream().listen((String value) {
+          setState(() {
+            _sharedText = value;
+            print("DEBUG --->>>>>> "+_sharedText);
+          });
+        }, onError: (err) {
+          print("DEBUG --->>>>>> getLinkStream error: $err");
+        });
+
+    //Stream<String> stream=await ReceiveSharingIntent.getTextStream();
+    //String res= await stream.first;
+    //print("DEBUG --->>>>>> "+res);
+    //Stream<String> stream=await ReceiveSharingIntent.getTextStream();
+    //print("DEBUG --->>>>>> "+stream.toString());
+    ReceiveSharingIntent.getInitialTextAsUri().then((value) {
+      if(value != null){
+        setState(() {
+          _sharedText = value.toString();
+          print("DEBUG --->>>>>> 22222"+_sharedText);
+        });
+      }
+      else{
+        print("DEBUG --->>>>>> 22222 NULL");
+      }
+
+    });
+    // For sharing or opening urls/text coming from outside the app while the app is closed
+    ReceiveSharingIntent.getInitialText().then((value) {
+      if(value != null){
+        setState(() {
+          _sharedText = value;
+          print("DEBUG --->>>>>> "+_sharedText);
+        });
+      }
+      else{
+        print("DEBUG --->>>>>> NULL");
+      }
+
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
 
   @override
   Widget build(BuildContext context) {
     //inputText=TextFormField();
 
-    return MaterialApp(
-      home: Scaffold(
+    return Scaffold(
         appBar: AppBar(title: Text('NFC Flutter')),
         body: SafeArea(
           child: FutureBuilder<bool>(
@@ -86,7 +153,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -117,12 +183,18 @@ class _HomePageState extends State<HomePage> {
 
       NdefMessage message = NdefMessage([
         //NdefRecord.createText('Hello World!'),
-        NdefRecord.createText(textController.text),
-        NdefRecord.createUri(Uri.parse('https://eurekamps.com')),
-        NdefRecord.createMime(
-            'text/plain', Uint8List.fromList('Hello'.codeUnits)),
-        NdefRecord.createExternal(
-            'com.example.nfc_flutter', 'mytype', Uint8List.fromList('mydata'.codeUnits)),
+
+        //NdefRecord.createUri(Uri.parse('https://eurekamps.com')),
+        //NdefRecord.createUri(Uri.parse('example://gizmos')),
+        //NdefRecord.createExternal("com.example", "externalType", Uint8List.fromList('HEY!'.codeUnits)),
+      NdefRecord.createMime('application/vnd.com.example.android.beam', Uint8List.fromList('hfhsnd23yuisbd24aas2'.codeUnits)),
+        //NdefRecord.createText("hfhsnd23yuisbd24aas2")
+        //NdefRecord.createMime(
+        //    'text/plain', Uint8List.fromList('Hello'.codeUnits)),
+        //NdefRecord.createExternal('android.com', 'pkg', Uint8List.fromList('com.example.nfc_flutter'.codeUnits)),
+        //NdefRecord.createExternal('ios.com', 'pkg', Uint8List.fromList('com.example.nfc_flutter'.codeUnits)),
+        //NdefRecord.createMime("Content-type", Uint8List.fromList('vnd.com.example.nfc_flutter'.codeUnits))
+        //NdefRecord.type("Content-type", "vnd.app.reliqium.reliqium")
       ]);
 
       try {
